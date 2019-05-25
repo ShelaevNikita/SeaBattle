@@ -156,3 +156,4 @@ class Board @JvmOverloads constructor(private val width: Int = 10, private val h
 
     fun finishStage () = firstship + secondship + thirdship + fourthship < 0
 }
+
