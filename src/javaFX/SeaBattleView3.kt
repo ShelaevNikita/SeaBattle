@@ -1,11 +1,9 @@
 import javafx.scene.control.Button
-import javafx.scene.control.Label
-import javafx.scene.image.ImageView
 import javafx.scene.layout.BorderPane
 import javafx.scene.paint.Color
 import tornadofx.*
 
-class SeaBattleView : View(), BoardListener {
+class SeaBattleView3 : View(), BoardListener {
 
     private val columnsNumber = 10
 
@@ -24,7 +22,7 @@ class SeaBattleView : View(), BoardListener {
         val listener = BoardBasedCellListener(board)
         board.registerListener(this)
 
-        with (root) {
+        with(root) {
             top {
                 vbox {
                     menubar {
@@ -34,7 +32,7 @@ class SeaBattleView : View(), BoardListener {
                             }
                             separator()
                             item("Exit").action {
-                                this@SeaBattleView.close()
+                                this@SeaBattleView3.close()
                             }
                         }
                     }
@@ -44,14 +42,14 @@ class SeaBattleView : View(), BoardListener {
                 gridpane {
                     hgap = 5.0
                     vgap = 5.0
-                    val dimension = Dimension(50.0, Dimension.LinearUnits.px)
+                    val dimension = Dimension(45.0, Dimension.LinearUnits.px)
                     for (row in 0 until rowsNumber) {
                         row {
                             for (column in 0 until columnsNumber) {
                                 val cell = Cell(column, rowsNumber - 1 - row)
                                 val button = button {
                                     style {
-                                        backgroundColor += Color.GRAY
+                                        backgroundColor += Color.BLUE
                                         minWidth = dimension
                                         minHeight = dimension
                                     }
@@ -72,13 +70,14 @@ class SeaBattleView : View(), BoardListener {
 
     private fun restartGame() {
         board.clear()
-        for (x in 0 until columnsNumber) {
-            for (y in 0 until rowsNumber) {
-                updateBoardAndStatus(Cell(x, y))
-            }
-        }
+        replaceWith<SeaBattleView1>()
+        board.firstship = 4
+        board.secondship = 3
+        board.thirdship = 2
+        board.fourthship = 1
         inProcess = true
     }
+
     override fun turnMade(cell: Cell) {
         updateBoardAndStatus(cell)
     }
@@ -87,9 +86,9 @@ class SeaBattleView : View(), BoardListener {
         if (cell == null) return
         val chip = board[cell]
         buttons[cell]?.apply {
-            graphic = circle(radius = 24.0) {
+            graphic = circle(radius = 20.0) {
                 fill = when (chip) {
-                    null -> Color.GRAY
+                    null -> Color.BLUE
                     else -> Color.RED
                 }
             }
