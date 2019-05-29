@@ -78,6 +78,7 @@ class SeaBattleView : View(), BoardListener {
                         text = "Старт"
                     }
                 }
+
                 val button2 = button {
                     style {
                         backgroundColor += Color.GREEN
