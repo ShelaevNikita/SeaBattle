@@ -129,6 +129,7 @@ class Board @JvmOverloads constructor(private val width: Int = 10, private val h
         for (cell in list) {
             if (stage == 1) table1[cell.x] [cell.y] = ship
             else table2[cell.x] [cell.y] = ship
+            number += sum
             listfinish += makeTurn(cell.x, cell.y, true)
         }
         return listfinish
@@ -137,6 +138,8 @@ class Board @JvmOverloads constructor(private val width: Int = 10, private val h
     private var firstx = -1
 
     private var firsty = -1
+
+    private var number = 0
 
     var value = 0
 
@@ -154,6 +157,5 @@ class Board @JvmOverloads constructor(private val width: Int = 10, private val h
         return null
     }
 
-    fun finishStage () = firstship + secondship + thirdship + fourthship < 0
+    fun finishStage () = number == 20
 }
-
