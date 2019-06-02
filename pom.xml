@@ -60,7 +60,7 @@
                                 <source>src/main/java</source>
                                 <source>src/controller</source>
                                 <source>src/core</source>
-                                <source>src/javaFX</source>
+                                <source>src/tornadoFX</source>
                                 <source>src/main</source>
                             </sourceDirs>
                         </configuration>
