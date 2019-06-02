@@ -2,7 +2,6 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class BoardTest {
-
     @Test
     fun control() {
         val board = Board(10, 10)

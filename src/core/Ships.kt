@@ -5,3 +5,4 @@ enum class Ships {
     FOURTH,
     NO;
 }
+
