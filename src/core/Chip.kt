@@ -1,4 +1,5 @@
 enum class Chip {
-    KRESTIC,
-    NOLIC;
+    SHIP,
+    NO,
+    KILL;
 }

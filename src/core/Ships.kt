@@ -1,4 +1,4 @@
-enum class Ships{
+enum class Ships {
     FIRST,
     SECOND,
     THIRD,
