@@ -293,7 +293,6 @@ class Board @JvmOverloads constructor(private val width: Int = 10, private val h
         if (shotkill2 >= 20) return 2
         return 0
     }
-
     override fun toString(): String {
         val sb = StringBuilder()
         for (y in height - 1..0) {
