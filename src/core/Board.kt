@@ -127,7 +127,7 @@ class Board @JvmOverloads constructor(private val width: Int = 10, private val h
 
     var stage = Stage.TurnFirst
 
-    var value = 1
+    private var value = 1
 
     private fun makeship(x: Int, y: Int, withEvent: Boolean): Cell? {
         val cell = Cell(x, y)
@@ -164,10 +164,6 @@ class Board @JvmOverloads constructor(private val width: Int = 10, private val h
     private var controltable = controltable2
 
     fun controlship(x: Int, y: Int): Chip {
-        return controlship1(x, y)
-    }
-
-    private fun controlship1(x: Int, y: Int): Chip {
         controltable[x][y] = true
         return if (table[x][y] == Ships.NO) {
             if (stage == Stage.First) {
@@ -234,19 +230,9 @@ class Board @JvmOverloads constructor(private val width: Int = 10, private val h
         return cell
     }
 
-    private fun count(x: Int, y: Int): Int {
-        return when (table[x][y]) {
-            Ships.FIRST -> 1
-            Ships.SECOND -> 2
-            Ships.THIRD -> 3
-            Ships.FOURTH -> 4
-            else -> -1
-        }
-    }
-
     private fun proverka(x: Int, y: Int): List<Cell> {
         val ships = table[x][y]
-        val count = count(x, y)
+        val count = ships.count
         var kill = 0
         val list = mutableListOf<Cell>()
         if (count == -1) return emptyList()
