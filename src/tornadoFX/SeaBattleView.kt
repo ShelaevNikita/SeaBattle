@@ -22,6 +22,10 @@ class SeaBattleView : View(), BoardListener {
 
     private lateinit var statusLabel: Label
 
+    private var cellfirst = Cell(0, 0)
+
+    private var stage = Stage.FirstCell
+
     private var inProcess = true
 
     override val root = BorderPane()
@@ -81,21 +85,14 @@ class SeaBattleView : View(), BoardListener {
                             style {
                                 backgroundColor += Color.ORANGE
                                 minWidth = 5 * dimension
-                                minHeight = 3 * dimension
-                                text = "Перейти к \n другому игроку"
+                                minHeight = 2.5 * dimension
+                                text = "   Перейти к \n другому игроку"
                                 textFill = Color.BLUE
                                 font = Font(17.0)
                             }
                         }
                         button2.action {
-                            board.firstship = 4
-                            board.secondship = 3
-                            board.thirdship = 2
-                            board.fourthship = 1
-                            board.stage = 2
-                            board.value = 0
                             button2.isVisible = false
-                            grid1.isVisible = false
                             grid2.isVisible = true
                             statusLabel.text = "Ход второго игрока: задайте координаты начала и конца корабля"
                             center {
@@ -110,7 +107,6 @@ class SeaBattleView : View(), BoardListener {
                                     }
                                 }
                                 button2.action {
-                                    board.value = 0
                                     statusLabel.text = "Черные - попал, красные - промах"
                                     left {
                                         grid1 = gridpane {
@@ -129,7 +125,7 @@ class SeaBattleView : View(), BoardListener {
                                                         }
                                                         button1.action {
                                                             if (inProcess) {
-                                                                if (board.value % 2 != 0) {
+                                                                if (board.stage == Stage.Second) {
                                                                     button1 = button1.apply {
                                                                         graphic = circle(radius = 13.0) {
                                                                             fill = when (board.controlship(cell.x, cell.y)) {
@@ -140,14 +136,7 @@ class SeaBattleView : View(), BoardListener {
                                                                         }
                                                                     }
                                                                 }
-                                                                for (cellkill in board.killship(cell.x, cell.y)) {
-                                                                    println(cellkill)
-                                                                    buttons3[cellkill] = button {
-                                                                        graphic = circle(radius = 13.0) {
-                                                                            fill = Color.RED
-                                                                        }
-                                                                    }
-                                                                }
+                                                                listener.killship(cell)
                                                                 if (board.win(cell.x, cell.y) == 2) {
                                                                     grid1.isVisible = false
                                                                     grid2.isVisible = false
@@ -172,6 +161,7 @@ class SeaBattleView : View(), BoardListener {
                                                                 }
                                                             }
                                                         }
+                                                        buttons3[cell] = button1
                                                     }
                                                 }
                                             }
@@ -194,7 +184,7 @@ class SeaBattleView : View(), BoardListener {
                                                         }
                                                         button1.action {
                                                             if (inProcess) {
-                                                                if (board.value % 2 == 0) {
+                                                                if (board.stage == Stage.First) {
                                                                     button1 = button1.apply {
                                                                         graphic = circle(radius = 13.0) {
                                                                             fill = when (board.controlship(cell.x, cell.y)) {
@@ -205,14 +195,7 @@ class SeaBattleView : View(), BoardListener {
                                                                         }
                                                                     }
                                                                 }
-                                                                for (cellkill in board.killship(cell.x, cell.y)) {
-                                                                    println(cellkill)
-                                                                    buttons4[cellkill] = button {
-                                                                        graphic = circle(radius = 13.0) {
-                                                                            fill = Color.RED
-                                                                        }
-                                                                    }
-                                                                }
+                                                                listener.killship(cell)
                                                                 if (board.win(cell.x, cell.y) == 1) {
                                                                     grid1.isVisible = false
                                                                     grid2.isVisible = false
@@ -237,6 +220,7 @@ class SeaBattleView : View(), BoardListener {
                                                                 }
                                                             }
                                                         }
+                                                        buttons4[cell] = button1
                                                     }
                                                 }
                                             }
@@ -267,10 +251,20 @@ class SeaBattleView : View(), BoardListener {
                                     }
                                 }
                                 button.action {
+                                    statusLabel.text = "1-ых - ${board.firstship}; 2-ых - ${board.secondship}; " +
+                                            " 3-ых - ${board.thirdship}; 4-ых - ${board.fourthship}"
                                     if (inProcess) {
-                                        listener.cellClicked(cell)
+                                        if (stage == Stage.FirstCell) {
+                                            cellfirst = cell
+                                            stage = Stage.LastCell
+                                        } else {
+                                            listener.cellClicked(cellfirst, cell)
+                                            stage = Stage.FirstCell
+                                        }
                                         if (board.finishStage()) {
                                             button2.isVisible = true
+                                            grid1.isVisible = false
+                                            statusLabel.text = "Нажмите на кнопку, чтобы перейти ко второму игроку"
                                         }
                                     }
                                 }
@@ -298,9 +292,19 @@ class SeaBattleView : View(), BoardListener {
                                 }
                                 button.action {
                                     if (inProcess) {
-                                        listener.cellClicked(cell)
+                                        statusLabel.text = "1-ых - ${board.firstship}; 2-ых - ${board.secondship}; " +
+                                                " 3-ых - ${board.thirdship}; 4-ых - ${board.fourthship}"
+                                        if (stage == Stage.FirstCell) {
+                                            cellfirst = cell
+                                            stage = Stage.LastCell
+                                        } else {
+                                            listener.cellClicked(cellfirst, cell)
+                                            stage = Stage.FirstCell
+                                        }
                                         if (board.finishStage()) {
                                             button2.isVisible = true
+                                            grid2.isVisible = false
+                                            statusLabel.text = "Нажмите на кнопку, чтобы начать бой"
                                         }
                                     }
                                 }
@@ -319,10 +323,14 @@ class SeaBattleView : View(), BoardListener {
         updateBoardAndStatus1(cell)
     }
 
+    override fun killship(cell: Cell) {
+        updateBoardAndStatus2(cell)
+    }
+
     private fun updateBoardAndStatus1(cell: Cell? = null) {
         if (cell == null) return
         val chip = board[cell]
-        if (board.stage == 1) {
+        if (board.stage == Stage.TurnFirst) {
             buttons1[cell]?.apply {
                 graphic = circle(radius = 13.0) {
                     fill = when (chip) {
@@ -337,6 +345,30 @@ class SeaBattleView : View(), BoardListener {
                 fill = when (chip) {
                     null -> Color.BLUE
                     Chip.SHIP -> Color.RED
+                    else -> Color.BLACK
+                }
+            }
+        }
+    }
+
+    private fun updateBoardAndStatus2(cell: Cell? = null) {
+        if (cell == null) return
+        val chip = board[cell]
+        if (board.stage == Stage.First) {
+            buttons4[cell]?.apply {
+                graphic = circle(radius = 13.0) {
+                    fill = when (chip) {
+                        null -> Color.BLUE
+                        Chip.KILL -> Color.RED
+                        else -> Color.BLACK
+                    }
+                }
+            }
+        } else buttons3[cell]?.apply {
+            graphic = circle(radius = 13.0) {
+                fill = when (chip) {
+                    null -> Color.BLUE
+                    Chip.KILL -> Color.RED
                     else -> Color.BLACK
                 }
             }

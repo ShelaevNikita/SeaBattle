@@ -6,8 +6,9 @@ class Board @JvmOverloads constructor(private val width: Int = 10, private val h
 
     private val chips = HashMap<Cell, Chip>()
 
-    var turn = Chip.SHIP
-        private set
+    private var turn = Chip.SHIP
+
+    private var turnkill = Chip.KILL
 
     var listener: BoardListener? = null
         private set
@@ -24,13 +25,15 @@ class Board @JvmOverloads constructor(private val width: Int = 10, private val h
         return chips[cell]
     }
 
-    private val table1 = MutableList(10) {
-        MutableList(10) { Ships.NO }
+    private val table1 = MutableList(height) {
+        MutableList(width) { Ships.NO }
     }
 
-    private val table2 = MutableList(10) {
-        MutableList(10) { Ships.NO }
+    private val table2 = MutableList(height) {
+        MutableList(width) { Ships.NO }
     }
+
+    private var table = table1
 
     private fun sum(x1: Int, y1: Int, x2: Int, y2: Int): Int {
         return when {
@@ -40,7 +43,7 @@ class Board @JvmOverloads constructor(private val width: Int = 10, private val h
         }
     }
 
-    fun ship(sum: Int): Ships {
+    private fun ship(sum: Int): Ships {
         return when (sum) {
             0 -> Ships.FIRST
             1 -> Ships.SECOND
@@ -54,9 +57,8 @@ class Board @JvmOverloads constructor(private val width: Int = 10, private val h
         var neighbor = 0
         for (a in -1..1) {
             for (b in -1..1) {
-                if ((x + a in 0..9) && (y + b in 0..9)) when (stage) {
-                    1 -> if (table1[x + a][y + b] != Ships.NO) neighbor++
-                    2 -> if (table2[x + a][y + b] != Ships.NO) neighbor++
+                if ((x + a in 0 until width) && (y + b in 0 until height)) {
+                    if (table[x + a][y + b] != Ships.NO) neighbor++
                 }
                 if (neighbor != 0) return false
             }
@@ -72,49 +74,44 @@ class Board @JvmOverloads constructor(private val width: Int = 10, private val h
 
     var fourthship = 1
 
-    fun valueship(ships: Ships): Boolean {
+    private fun valueship(ships: Ships): Boolean {
         when (ships) {
             Ships.FIRST -> {
+                if (firstship == 0) return false
                 firstship--
-                if (firstship < 0) return false
             }
             Ships.SECOND -> {
+                if (secondship == 0) return false
                 secondship--
-                if (secondship < 0) return false
             }
             Ships.THIRD -> {
+                if (thirdship == 0) return false
                 thirdship--
-                if (thirdship < 0) return false
             }
             Ships.FOURTH -> {
+                if (fourthship == 0) return false
                 fourthship--
-                if (fourthship < 0) return false
             }
             else -> return false
         }
         return true
     }
 
-    fun makeTurn(x: Int, y: Int): List<Cell?> {
+    fun makeShip(x1: Int, y1: Int, x2: Int, y2: Int): List<Cell?> {
         val list = mutableListOf<Cell>()
         val listfinish = mutableListOf<Cell?>()
-        var sum = -1
-        if (value % 2 == 0) {
-            firstx = x
-            firsty = y
-        } else sum = sum(firstx, firsty, x, y)
-        value++
+        val sum = sum(x1, y1, x2, y2)
         val ship = ship(sum)
-        if (firstx == x) {
-            if (firsty <= y) for (s in 0..sum)
-                list += Cell(firstx, firsty + s)
+        if (x1 == x2) {
+            if (y1 <= y2) for (s in 0..sum)
+                list += Cell(x1, y1 + s)
             else for (s in 0..sum)
-                list += Cell(firstx, firsty - s)
+                list += Cell(x1, y1 - s)
         } else {
-            if (firstx <= x) for (s in 0..sum)
-                list += Cell(firstx + s, firsty)
+            if (x1 <= x2) for (s in 0..sum)
+                list += Cell(x1 + s, y1)
             else for (s in 0..sum)
-                list += Cell(firstx - s, firsty)
+                list += Cell(x1 - s, y1)
         }
         for (cell in list) {
             val neighbor = neighborhood(cell.x, cell.y)
@@ -122,159 +119,143 @@ class Board @JvmOverloads constructor(private val width: Int = 10, private val h
         }
         if (!valueship(ship)) return emptyList()
         for (cell in list) {
-            if (stage == 1) table1[cell.x][cell.y] = ship
-            else table2[cell.x][cell.y] = ship
-            listfinish += makeTurn(cell.x, cell.y, true)
+            table[cell.x][cell.y] = ship
+            listfinish += makeship(cell.x, cell.y, true)
         }
         return listfinish
     }
 
-    private var firstx = -1
+    var stage = Stage.TurnFirst
 
-    private var firsty = -1
+    var value = 1
 
-    var value = 0
-
-    var stage = 1
-
-    private fun makeTurn(x: Int, y: Int, withEvent: Boolean): Cell? {
+    private fun makeship(x: Int, y: Int, withEvent: Boolean): Cell? {
         val cell = Cell(x, y)
         chips[cell] = turn
-        if (listener != null && withEvent) {
-            listener!!.turnMade(cell)
+        if (withEvent) {
+            listener?.turnMade(cell)
         }
         return cell
     }
 
-    fun finishStage() = ((firstship <= 0) && (secondship <= 0) && (thirdship <= 0) && (fourthship <= 0))
-
-    private val controltable1 = MutableList(10) {
-        MutableList(10) { false }
+    fun finishStage(): Boolean {
+        return if ((firstship == 0) && (secondship == 0) && (thirdship == 0) && (fourthship == 0)) {
+            value--
+            if (value == 0) {
+                table = table2
+                firstship = 4
+                secondship = 3
+                thirdship = 2
+                fourthship = 1
+            }
+            stage = if (stage == Stage.TurnFirst) Stage.TurnSecond else Stage.First
+            true
+        } else false
     }
 
-    private val controltable2 = MutableList(10) {
-        MutableList(10) { false }
+    private val controltable1 = MutableList(height) {
+        MutableList(width) { false }
     }
+
+    private val controltable2 = MutableList(height) {
+        MutableList(width) { false }
+    }
+
+    private var controltable = controltable2
 
     fun controlship(x: Int, y: Int): Chip {
-        return if (value % 2 != 0) controlship1(x, y)
-        else controlship2(x, y)
-    }
-
-    private fun controlship2(x: Int, y: Int): Chip {
-        controltable2[x][y] = true
-        return if (table2[x][y] == Ships.NO) {
-            value++
-            Chip.NO
-        } else {
-            value += 2
-            Chip.KILL
-        }
+        return controlship1(x, y)
     }
 
     private fun controlship1(x: Int, y: Int): Chip {
-        controltable1[x][y] = true
-        return if (table1[x][y] == Ships.NO) {
-            value++
+        controltable[x][y] = true
+        return if (table[x][y] == Ships.NO) {
+            if (stage == Stage.First) {
+                stage = Stage.Second
+                controltable = controltable1
+                table = table1
+            } else {
+                stage = Stage.First
+                controltable = controltable2
+                table = table2
+            }
             Chip.NO
         } else {
-            value += 2
             Chip.KILL
         }
     }
 
-    fun killship(x: Int, y: Int): List<Cell> {
-        val valuekill = value % 2
+    fun killship(x: Int, y: Int): List<Cell?> {
         val list = mutableListOf<Cell>()
+        val listfinish = mutableListOf<Cell?>()
         val listkill = proverka(x, y)
         if (listkill.isNotEmpty()) {
-            val shipfirst = proverka(x, y).first()
-            val shipfinish = proverka(x, y).last()
-            val firstx = shipfirst.x
-            val firsty = shipfirst.y
-            val finishx = shipfinish.x
-            val finishy = shipfinish.y
-            if (valuekill != 0) {
-                when (table1[x][y]) {
-                    Ships.FIRST -> {
-                        if (shipfinish == shipfirst) {
-                            if (x + 1 in 0..9) list += Cell(x + 1, y)
-                            if (x - 1 in 0..9) list += Cell(x - 1, y)
-                            if (y + 1 in 0..9) list += Cell(x, y + 1)
-                            if (y - 1 in 0..9) list += Cell(x, y - 1)
-                        }
-                    }
-                    else -> {
-                        if (firstx == finishx) {
-                            if (firsty - 1 in 0..9) list += Cell(firstx, firsty - 1)
-                            if (finishy + 1 in 0..9) list += Cell(shipfinish.x, finishy + 1)
-                        } else {
-                            if (firstx - 1 in 0..9) list += Cell(firstx - 1, firsty)
-                            if (finishx + 1 in 0..9) list += Cell(shipfinish.x + 1, finishy)
-                        }
-                    }
+            val first = listkill.first()
+            val last = listkill.last()
+            if (first.x == last.x) {
+                if (first.y - 1 in 0 until width) {
+                    for (a in first.x - 1..first.x + 1)
+                        if (a in 0 until height) list += Cell(a, first.y - 1)
                 }
-            } else when (table2[x][y]) {
-                Ships.FIRST -> {
-                    if (shipfinish == shipfirst) {
-                        if (x + 1 in 0..9) list += Cell(x + 1, y)
-                        if (x - 1 in 0..9) list += Cell(x - 1, y)
-                        if (y + 1 in 0..9) list += Cell(x, y + 1)
-                        if (y - 1 in 0..9) list += Cell(x, y - 1)
-                    }
+                if (last.y + 1 in 0 until width) {
+                    for (a in last.x - 1..last.x + 1)
+                        if (a in 0 until height) list += Cell(a, last.y + 1)
                 }
-                else -> if (firstx == finishx) {
-                    if (firsty - 1 in 0..9) list += Cell(firstx, firsty - 1)
-                    if (finishy + 1 in 0..9) list += Cell(shipfinish.x, finishy + 1)
-                } else {
-                    if (firstx - 1 in 0..9) list += Cell(firstx - 1, firsty)
-                    if (finishx + 1 in 0..9) list += Cell(shipfinish.x + 1, finishy)
+                for (kill in listkill) {
+                    if (kill.x + 1 in 0 until width) list += Cell(kill.x + 1, kill.y)
+                    if (kill.x - 1 in 0 until width) list += Cell(kill.x - 1, kill.y)
+                }
+            } else {
+                if (first.x - 1 in 0 until height) {
+                    for (b in first.y - 1..first.y + 1)
+                        if (b in 0 until width) list += Cell(first.x - 1, b)
+                }
+                if (last.x + 1 in 0 until height) {
+                    for (b in last.y - 1..last.y + 1)
+                        if (b in 0 until width) list += Cell(last.x + 1, b)
+                }
+                for (kill in listkill) {
+                    if (kill.y + 1 in 0 until height) list += Cell(kill.x, kill.y + 1)
+                    if (kill.y - 1 in 0 until height) list += Cell(kill.x, kill.y - 1)
                 }
             }
-            return list
+            for (cell in list)
+                listfinish += makeshipkill(cell.x, cell.y, true)
         }
-        return emptyList()
+        return listfinish
+    }
+
+    private fun makeshipkill(x: Int, y: Int, withEvent: Boolean): Cell? {
+        val cell = Cell(x, y)
+        chips[cell] = turnkill
+        if (withEvent) {
+            listener?.killship(cell)
+        }
+        return cell
     }
 
     private fun count(x: Int, y: Int): Int {
-        val valuekill = value % 2
-        return if (valuekill != 0) {
-            when (table1[x][y]) {
-                Ships.FIRST -> 0
-                Ships.SECOND -> 1
-                Ships.THIRD -> 2
-                Ships.FOURTH -> 3
-                else -> -1
-            }
-        } else when (table2[x][y]) {
-            Ships.FIRST -> 0
-            Ships.SECOND -> 1
-            Ships.THIRD -> 2
-            Ships.FOURTH -> 3
+        return when (table[x][y]) {
+            Ships.FIRST -> 1
+            Ships.SECOND -> 2
+            Ships.THIRD -> 3
+            Ships.FOURTH -> 4
             else -> -1
         }
     }
 
     private fun proverka(x: Int, y: Int): List<Cell> {
-        val valuekill = value % 2
-        val ships = if (valuekill != 0) table1[x][y] else table2[x][y]
+        val ships = table[x][y]
         val count = count(x, y)
         var kill = 0
         val list = mutableListOf<Cell>()
         if (count == -1) return emptyList()
-        for (a in -count..count) {
-            if (x + a in 0..9) when (valuekill) {
-                1 -> if ((table1[x + a][y] == ships) && controltable1[x + a][y]) {
+        for (a in -count + 1 until count) {
+            if (x + a in 0 until width) {
+                if ((table[x + a][y] == ships) && controltable[x + a][y]) {
                     kill++
                     list += Cell(x + a, y)
-                    if (kill == count + 1) {
-                        return list
-                    }
-                }
-                0 -> if ((table2[x + a][y] == ships) && controltable2[x + a][y]) {
-                    kill++
-                    list += Cell(x + a, y)
-                    if (kill == count + 1) {
+                    if (kill == count) {
                         return list
                     }
                 }
@@ -282,23 +263,17 @@ class Board @JvmOverloads constructor(private val width: Int = 10, private val h
         }
         kill = 0
         list.clear()
-        for (b in -count..count) {
-            if (y + b in 0..9) when (valuekill) {
-                1 -> if ((table1[x][y + b] == ships) && controltable1[x][y + b]) {
+        for (b in -count + 1 until count) {
+            if (y + b in 0 until height) {
+                if ((table[x][y + b] == ships) && controltable[x][y + b]) {
                     kill++
                     list += Cell(x, y + b)
-                    if (kill == count + 1) {
-                        return list
-                    }
-                }
-                0 -> if ((table2[x][y + b] == ships) && controltable2[x][y + b]) {
-                    kill++
-                    list += Cell(x, y + b)
-                    if (kill == count + 1) {
+                    if (kill == count) {
                         return list
                     }
                 }
             }
+
         }
         return emptyList()
     }
@@ -309,7 +284,7 @@ class Board @JvmOverloads constructor(private val width: Int = 10, private val h
 
     fun win(x: Int, y: Int): Int {
         val shot = proverka(x, y).size
-        if (value % 2 == 0) {
+        if (stage == Stage.First) {
             shotkill1 += shot
         } else {
             shotkill2 += shot
