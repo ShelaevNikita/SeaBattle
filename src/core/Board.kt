@@ -295,14 +295,18 @@ class Board @JvmOverloads constructor(private val width: Int = 10, private val h
 
     override fun toString(): String {
         val sb = StringBuilder()
-        for (y in height - 1..0) {
+        for (y in 0 until height) {
             for (x in 0 until width) {
                 val chip = get(x, y)
                 if (chip == null) {
-                    sb.append("- ")
+                    sb.append("---- ")
                     continue
                 }
-                if (chip == Chip.SHIP) sb.append("Ship")
+                when (chip) {
+                    Chip.SHIP -> sb.append("Ship ")
+                    Chip.KILL ->  sb.append("Kill ")
+                    Chip.NO ->  sb.append("No ")
+                }
             }
             sb.append("\n")
         }
