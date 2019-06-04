@@ -16,8 +16,9 @@ class BoardTest {
         assertEquals(board.stage, Stage.Second)
         assertEquals(board.controlship(2, 1), Chip.KILL)
         assertEquals(board.stage, Stage.Second)
-        board.killship(1, 1)
+        val listfirst = board.killship(1, 1)
         val listkill = board.killship(2, 1)
+        assertEquals(listfirst, listkill)
         assertEquals(listkill, listOf(Cell(0, 0), Cell(0, 1), Cell(0,2), Cell(3, 0),
                 Cell(3,1), Cell (3, 2), Cell(1, 2), Cell(1,0),
                 Cell(2, 2), Cell(2, 0)))
