@@ -290,8 +290,8 @@ class SeaBattleView : View(), BoardListener {
                                             }
                                             listener.cellClicked(cellfirst, cell)
                                             stage = Stage.FirstCell
-                                            statusLabel.text = "1-ых - ${board.firstship}; 2-ых - ${board.secondship}; " +
-                                                    " 3-ых - ${board.thirdship}; 4-ых - ${board.fourthship}"
+                                            statusLabel.text = "1-ых - ${board.firstship};  2-ых - ${board.secondship}; " +
+                                                    " 3-ых - ${board.thirdship};  4-ых - ${board.fourthship}"
                                         }
                                         if (board.finishStage()) {
                                             button2.isVisible = true
@@ -341,8 +341,8 @@ class SeaBattleView : View(), BoardListener {
                                             }
                                             listener.cellClicked(cellfirst, cell)
                                             stage = Stage.FirstCell
-                                            statusLabel.text = "1-ых - ${board.firstship}; 2-ых - ${board.secondship}; " +
-                                                    " 3-ых - ${board.thirdship}; 4-ых - ${board.fourthship}"
+                                            statusLabel.text = "1-ых - ${board.firstship};  2-ых - ${board.secondship}; " +
+                                                    " 3-ых - ${board.thirdship};  4-ых - ${board.fourthship}"
                                         }
                                         if (board.finishStage()) {
                                             button2.isVisible = true

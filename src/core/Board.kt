@@ -268,6 +268,9 @@ class Board @JvmOverloads constructor(private val width: Int = 10, private val h
 
     private val set2 = mutableSetOf<Cell>()
 
+    private val countfinish = Ships.FIRST.kill + Ships.SECOND.kill +
+            Ships.THIRD.kill + Ships.FOURTH.kill
+
     fun win(x: Int, y: Int): Int {
         val list = proverka(x, y)
         val shot = list.size
@@ -285,8 +288,8 @@ class Board @JvmOverloads constructor(private val width: Int = 10, private val h
                 shotkill2 += shot
             }
         }
-        if (shotkill1 >= 20) return 1
-        if (shotkill2 >= 20) return 2
+        if (shotkill1 == countfinish) return 1
+        if (shotkill2 == countfinish) return 2
         return 0
     }
 
