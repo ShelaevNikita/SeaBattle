@@ -36,11 +36,12 @@ class Board @JvmOverloads constructor(private val width: Int = 10, private val h
     private var table = table1
 
     private fun sum(x1: Int, y1: Int, x2: Int, y2: Int): Int {
-        return when {
+        val sum = when {
             (x2 == x1) -> abs(y2 - y1)
             (y2 == y1) -> abs(x2 - x1)
             else -> -1
         }
+        return if (sum in 0..3) sum else -1
     }
 
     private fun ship(sum: Int): Ships {
@@ -57,22 +58,21 @@ class Board @JvmOverloads constructor(private val width: Int = 10, private val h
         var neighbor = 0
         for (a in -1..1) {
             for (b in -1..1) {
-                if ((x + a in 0 until width) && (y + b in 0 until height)) {
-                    if (table[x + a][y + b] != Ships.NO) neighbor++
-                }
+                if ((x + a in 0 until width) && (y + b in 0 until height) &&
+                        (table[x + a][y + b] != Ships.NO)) neighbor++
                 if (neighbor != 0) return false
             }
         }
         return true
     }
 
-    var firstship = 4
+    var firstship = Ships.FIRST.value
 
-    var secondship = 3
+    var secondship = Ships.SECOND.value
 
-    var thirdship = 2
+    var thirdship = Ships.THIRD.value
 
-    var fourthship = 1
+    var fourthship = Ships.FOURTH.value
 
     private fun valueship(ships: Ships): Boolean {
         when (ships) {
@@ -127,8 +127,6 @@ class Board @JvmOverloads constructor(private val width: Int = 10, private val h
 
     var stage = Stage.TurnFirst
 
-    private var value = 1
-
     private fun makeship(x: Int, y: Int, withEvent: Boolean): Cell? {
         val cell = Cell(x, y)
         chips[cell] = turn
@@ -139,15 +137,13 @@ class Board @JvmOverloads constructor(private val width: Int = 10, private val h
     }
 
     fun finishStage(): Boolean {
-        return if ((firstship == 0) && (secondship == 0) && (thirdship == 0) && (fourthship == 0)) {
-            value--
-            if (value == 0) {
-                table = table2
-                firstship = 4
-                secondship = 3
-                thirdship = 2
-                fourthship = 1
-            }
+        return if ((firstship == 0) && (secondship == 0) && (thirdship == 0)
+                && (fourthship == 0)) {
+            table = table2
+            firstship = 4
+            secondship = 3
+            thirdship = 2
+            fourthship = 1
             stage = if (stage == Stage.TurnFirst) Stage.TurnSecond else Stage.First
             true
         } else false
@@ -268,12 +264,26 @@ class Board @JvmOverloads constructor(private val width: Int = 10, private val h
 
     private var shotkill2 = 0
 
+    private val set1 = mutableSetOf<Cell>()
+
+    private val set2 = mutableSetOf<Cell>()
+
     fun win(x: Int, y: Int): Int {
-        val shot = proverka(x, y).size
+        val list = proverka(x, y)
+        val shot = list.size
+        var control = true
         if (stage == Stage.First) {
-            shotkill1 += shot
+            for (cell in list) if (cell in set1) control = false
+            if (control) {
+                for (cell in list) set1 += cell
+                shotkill1 += shot
+            }
         } else {
-            shotkill2 += shot
+            for (cell in list) if (cell in set2) control = false
+            if (control) {
+                for (cell in list) set2 += cell
+                shotkill2 += shot
+            }
         }
         if (shotkill1 >= 20) return 1
         if (shotkill2 >= 20) return 2
